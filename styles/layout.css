@@ -1,0 +1,465 @@
+/* ==========================================================================
+   KOMA · Base Reset & Spatial Layout
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-canvas);
+  color: var(--ink-primary);
+  line-height: 1.55;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color var(--dur-base) var(--ease-out),
+              color var(--dur-base) var(--ease-out);
+}
+
+/* Subtle archival paper / darkroom film grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.026;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+[data-theme="dark"] body::before {
+  opacity: 0.035;
+}
+
+.ambient-grid {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 440px;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(to right, var(--border-subtle) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border-subtle) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 75% 70% at 50% 0%, #000 10%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 70% at 50% 0%, #000 10%, transparent 78%);
+  opacity: 0.65;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+img,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  height: var(--header-h);
+  background: var(--bg-glass);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.header-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  user-select: none;
+}
+
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--ink-primary);
+  color: var(--ink-inverse);
+  display: grid;
+  place-items: center;
+  position: relative;
+  box-shadow: var(--shadow-xs);
+  transition: transform var(--dur-fast) var(--ease-spring);
+}
+
+.brand:hover .brand-mark {
+  transform: scale(1.04) rotate(-2deg);
+}
+
+.brand-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.brand-name {
+  font-family: var(--font-sans);
+  font-weight: 750;
+  font-size: 0.98rem;
+  letter-spacing: 0.12em;
+  color: var(--ink-primary);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==========================================================================
+   Main Stage & Spatial Hero
+   ========================================================================== */
+.main-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: 48px 96px;
+  transition: padding-top var(--dur-slow) var(--ease-out);
+}
+
+.main-stage.has-results {
+  justify-content: flex-start;
+  padding-block: 28px 68px;
+}
+
+.hero-section {
+  max-width: 920px;
+  margin-inline: auto;
+  text-align: center;
+  width: 100%;
+}
+
+.hero-section .input-dock {
+  max-width: 740px;
+  margin-inline: auto;
+}
+
+.hero-title {
+  font-family: var(--font-editorial-serif);
+  font-size: clamp(2.15rem, 4.4vw, 3.35rem);
+  font-weight: 500;
+  line-height: 1.16;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  color: var(--ink-primary);
+  margin-bottom: 30px;
+  transition: font-size var(--dur-slow) var(--ease-out),
+              margin-bottom var(--dur-slow) var(--ease-out);
+}
+
+html[lang="en"] .hero-title {
+  font-size: clamp(2.35rem, 4.6vw, 3.7rem);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+html[lang="ja"] .hero-title {
+  font-size: clamp(1.9rem, 3.8vw, 3.05rem);
+  letter-spacing: -0.01em;
+}
+
+.hero-title .editorial-accent {
+  font-family: var(--font-fangsong);
+  font-style: normal;
+  font-weight: 400;
+  font-synthesis: none;
+  font-size: 1.08em;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  padding-inline: 4px;
+}
+
+html[lang="en"] .hero-title .editorial-accent {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-style: italic;
+  font-size: 1.04em;
+  letter-spacing: 0;
+  padding-inline: 2px;
+}
+
+html[lang="ja"] .hero-title .editorial-accent {
+  font-family: 'Noto Serif JP', 'Hiragino Mincho ProN', 'Zhuque Fangsong', serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 1.04em;
+  padding-inline: 3px;
+}
+
+.main-stage.has-results .hero-title {
+  font-size: clamp(1.3rem, 2.1vw, 1.65rem);
+  margin-bottom: 16px;
+}
+
+html[lang="en"] .main-stage.has-results .hero-title {
+  font-size: clamp(1.45rem, 2.3vw, 1.85rem);
+}
+
+/* ==========================================================================
+   Results Section & Adaptive Contact-Sheet Grid
+   ========================================================================== */
+.results-workspace {
+  margin-top: 32px;
+  animation: fadeSlideUp var(--dur-slow) var(--ease-out) both;
+}
+
+.results-workspace[hidden] {
+  display: none;
+}
+
+.media-grid {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.media-grid[data-count="1"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.media-grid[data-count="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* ==========================================================================
+   Footer
+   ========================================================================== */
+.site-footer {
+  border-top: 1px solid var(--border-subtle);
+  padding-block: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.footer-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 0.76rem;
+  color: var(--ink-tertiary);
+}
+
+.footer-shortcuts {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.shortcut-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.kbd {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--ink-secondary);
+  box-shadow: 0 1px 0 var(--border-default);
+}
+
+/* ==========================================================================
+   Slide-Over Drawer
+   ========================================================================== */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 13, 11, 0.48);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 80;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  width: min(410px, calc(100vw - 24px));
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(calc(100% + 28px));
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+.drawer.is-open {
+  transform: translateX(0);
+}
+
+/* ==========================================================================
+   Lightbox
+   ========================================================================== */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  background: rgba(12, 11, 10, 0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: #F3F1EC;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+.lightbox.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ==========================================================================
+   Keyframes
+   ========================================================================== */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseLive {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   Responsive Breakpoints
+   ========================================================================== */
+@media (max-width: 960px) {
+  .media-grid[data-count="3"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .container {
+    padding-inline: 16px;
+  }
+
+  .main-stage {
+    padding-block: 28px 48px;
+  }
+
+  .media-grid,
+  .media-grid[data-count="3"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .footer-shortcuts {
+    display: none;
+  }
+}

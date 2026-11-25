@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KOMA — X / Twitter 推文媒体解析</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Noto+Serif+JP:wght@500;600&family=Noto+Serif+SC:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+    media="print"
+    onload="this.media='all'"
+  />
+
+  <link rel="stylesheet" href="styles/tokens.css?v=7" />
+  <link rel="stylesheet" href="styles/layout.css?v=7" />
+  <link rel="stylesheet" href="styles/components.css?v=7" />
+
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('koma_theme');
+        if (!t) t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+        var l = localStorage.getItem('koma_lang');
+        if (l) document.documentElement.lang = l;
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body>
+  <div class="ambient-grid" aria-hidden="true"></div>
+
+  <!-- Minimal Header -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="./" class="brand" aria-label="KOMA">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="16" rx="2.5" />
+            <circle cx="12" cy="12" r="3.5" />
+          </svg>
+          <span class="brand-dot"></span>
+        </span>
+        <span class="brand-name">KOMA</span>
+      </a>
+
+      <div class="header-actions">
+        <!-- Language Switcher -->
+        <div class="lang-switcher" id="langSwitcher">
+          <button
+            type="button"
+            class="icon-btn"
+            id="langToggleBtn"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            title="切换语言"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+              <path d="M2 12h20" />
+            </svg>
+            <span id="langLabel">中文</span>
+          </button>
+
+          <div class="lang-menu" id="langMenu" role="listbox" aria-label="Language" hidden>
+            <button type="button" class="lang-option" role="option" data-lang="zh-CN">
+              <span>简体中文</span>
+              <span class="lang-code">ZH</span>
+            </button>
+            <button type="button" class="lang-option" role="option" data-lang="en">
+              <span>English</span>
+              <span class="lang-code">EN</span>
+            </button>
+            <button type="button" class="lang-option" role="option" data-lang="ja">
+              <span>日本語</span>
+              <span class="lang-code">JA</span>
+            </button>
+          </div>
+        </div>
+
+        <button type="button" class="icon-btn" id="historyToggleBtn" title="解析历史">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+            <path d="M12 7v5l4 2" />
+          </svg>
+          <span id="historyBtnLabel">历史</span>
+          <span class="badge-count" id="historyBadge" hidden>0</span>
+        </button>
+
+        <button type="button" class="icon-btn" id="themeToggleBtn" title="切换主题" aria-label="切换主题"></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Stage -->
+  <main class="main-stage" id="mainStage">
+    <div class="container">
+      <section class="hero-section">
+        <h1 class="hero-title" id="heroTitle">
+          提取推文中的<span class="editorial-accent">静像</span>与<span class="editorial-accent">动图</span>
+        </h1>
+
+        <form class="input-dock" id="urlForm" novalidate>
+          <div class="input-row">
+            <div class="input-icon-wrap" aria-hidden="true">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </div>
+
+            <div class="url-input-wrap">
+              <input
+                type="url"
+                id="urlInput"
+                class="url-input"
+                placeholder="粘贴 X / Twitter 推文链接"
+                autocomplete="off"
+                spellcheck="false"
+                aria-label="X / Twitter 推文链接"
+              />
+              <button type="button" class="input-clear-btn" id="clearInputBtn" title="清空" hidden>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <button type="button" class="paste-btn" id="pasteBtn" title="从剪贴板粘贴">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="8" height="4" x="8" y="2" rx="1" />
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+              </svg>
+              <span id="pasteBtnLabel">粘贴</span>
+            </button>
+
+            <button type="submit" class="parse-btn" id="parseBtn">
+              <span>解析</span>
+            </button>
+          </div>
+
+          <div class="dock-feedback" id="dockFeedback" hidden>
+            <div class="dock-detected" id="dockDetected"></div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Error Banner -->
+      <section class="error-banner" id="errorBanner" role="alert" hidden>
+        <div class="error-icon" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" x2="12" y1="8" y2="12" />
+            <line x1="12" x2="12.01" y1="16" y2="16" />
+          </svg>
+        </div>
+        <div class="error-body">
+          <div class="error-title" id="errorTitle"></div>
+          <p class="error-detail" id="errorDetail"></p>
+        </div>
+      </section>
+
+      <!-- Loading Skeleton -->
+      <section class="loading-state" id="loadingState" hidden>
+        <div class="skeleton-box skeleton-ribbon"></div>
+        <div class="skeleton-grid">
+          <div class="skeleton-box skeleton-card"></div>
+          <div class="skeleton-box skeleton-card"></div>
+        </div>
+      </section>
+
+      <!-- Results Workspace -->
+      <section class="results-workspace" id="resultsWorkspace" hidden>
+        <div class="tweet-ribbon" id="tweetRibbon"></div>
+
+        <div class="workspace-toolbar" id="workspaceToolbar" hidden>
+          <div class="toolbar-group" id="filterGroup" hidden>
+            <div class="filter-tabs" id="filterTabs" role="tablist"></div>
+          </div>
+
+          <div class="toolbar-group" id="photoControlsGroup" hidden>
+            <div class="segmented" id="qualityGroup" role="group">
+              <button type="button" class="seg-btn is-active" data-quality="orig">ORIG</button>
+              <button type="button" class="seg-btn" data-quality="4096x4096">4K</button>
+              <button type="button" class="seg-btn" data-quality="large">LARGE</button>
+              <button type="button" class="seg-btn" data-quality="medium">MED</button>
+            </div>
+
+            <select id="formatSelect" class="select-pill">
+              <option value="auto">AUTO</option>
+              <option value="jpg">JPG</option>
+              <option value="png">PNG</option>
+              <option value="webp">WEBP</option>
+            </select>
+          </div>
+
+          <div class="toolbar-group" id="batchGroup" hidden>
+            <button type="button" class="batch-btn" id="copyAllBtn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="14" height="14" x="8" y="8" rx="2" />
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+              </svg>
+              <span id="copyAllLabel">复制全部链接</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="media-grid" id="mediaGrid"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Minimal Keyboard Hint Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-shortcuts">
+        <span class="shortcut-hint"><kbd class="kbd">/</kbd> <span id="shortcutFocus">输入</span></span>
+        <span class="shortcut-hint"><kbd class="kbd">←</kbd><kbd class="kbd">→</kbd> <span id="shortcutNav">切帧</span></span>
+        <span class="shortcut-hint"><kbd class="kbd">C</kbd> <span id="shortcutCopy">复制</span></span>
+        <span class="shortcut-hint"><kbd class="kbd">ESC</kbd> <span id="shortcutClose">关闭</span></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- History Slide-Over Drawer -->
+  <div class="backdrop" id="backdrop"></div>
+  <aside class="drawer" id="historyDrawer">
+    <div class="drawer-header">
+      <h2 class="drawer-title" id="drawerTitle">历史</h2>
+      <div style="display:flex;gap:6px;">
+        <button type="button" class="icon-btn" id="clearHistoryBtn" style="height:32px;font-size:0.76rem;">清空</button>
+        <button type="button" class="icon-btn" id="closeHistoryBtn" style="height:32px;min-width:32px;" aria-label="关闭">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="drawer-body" id="historyList"></div>
+  </aside>
+
+  <!-- Full-Screen Lightbox -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+    <div class="lightbox-header">
+      <div class="lightbox-info">
+        <span id="lbCounter">01 / 01</span>
+        <span style="opacity:0.35">/</span>
+        <span id="lbMeta">PHOTO</span>
+      </div>
+      <div class="lightbox-actions">
+        <button type="button" class="lb-btn" id="lbCopyBtn">复制直链</button>
+        <button type="button" class="lb-btn" id="lbDownloadBtn">下载</button>
+        <a class="lb-btn" id="lbOpenBtn" href="#" target="_blank" rel="noopener noreferrer">新标签打开</a>
+        <button type="button" class="lb-btn" id="lbCloseBtn" aria-label="关闭">✕</button>
+      </div>
+    </div>
+
+    <div class="lightbox-stage">
+      <button type="button" class="lb-nav prev" id="lbPrev" aria-label="上一帧">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m15 18-6-6 6-6" />
+        </svg>
+      </button>
+      <div class="lightbox-media-wrap" id="lbMediaWrap"></div>
+      <button type="button" class="lb-nav next" id="lbNext" aria-label="下一帧">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="lightbox-footer">
+      <span class="lightbox-url" id="lbUrl"></span>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script defer src="js/i18n.js?v=6"></script>
+  <script defer src="js/parser.js?v=6"></script>
+  <script defer src="js/gif-encoder.js?v=6"></script>
+  <script defer src="js/app.js?v=6"></script>
+</body>
+</html>
